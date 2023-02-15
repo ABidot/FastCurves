@@ -10,11 +10,11 @@ path_file = os.path.dirname(__file__)
 save_path = os.path.join(os.path.dirname(path_file), "output_curves/")
 save_path_colormap = os.path.join(os.path.dirname(path_file), "colormaps/")
 
-def colormap(T, Rmin, Rmax, step_res=1000, step_l0=0.1, nbPixels=3330, log=False, tellurics=True, broadening=0,
+def colormap(T, step_l0=0.1, nbPixels=3330, log=False, tellurics=True, broadening=0,
              save=True,
              save_path=save_path_colormap,
              show=False, ret=False, model="BT_Settl", instru="HARMONI"):
-    R = np.arange(Rmin, Rmax, step_res)
+
     R = np.logspace(2.7, 4.99, num=80)
 
     lambda_0 = np.arange(1., 2.8, step_l0)
@@ -48,11 +48,9 @@ def colormap(T, Rmin, Rmax, step_res=1000, step_l0=0.1, nbPixels=3330, log=False
     for j, res in enumerate(R):
         delta_lamb = 2 / (2 * res)
         wav = np.arange(0.7, 3, delta_lamb)
-        planet_R = planet_contrast.degrade_resolution_2(res, wav)
-        print(planet_R.flux)
-        star_contrast = mol_star.degrade_resolution_2(res, wav)
-        sky_R = sky_trans.degrade_resolution_2(res, wav)
-        sky_R.flux = max_trans * sky_R.flux / np.max(sky_R.flux)
+        planet_R = planet_contrast.degrade_resolution(res, wav)
+        star_contrast = mol_star.degrade_resolution(res, wav)
+        sky_R = sky_trans.degrade_resolution(res, wav, tell=True)
         sigma = np.sqrt(np.log(2)) / (np.pi * (245 / (2 * res)))
         sigma = max(1, sigma)
 

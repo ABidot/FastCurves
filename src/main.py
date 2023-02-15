@@ -10,8 +10,14 @@ def run_FastCurves():
                tellurics=True,
                verbose=True, save=True, form="png", instru="HARMONI")
 
+def run_Colormaps():
+    colormap(1000, step_l0=0.01, nbPixels=3330, log=True, tellurics=True, broadening=0,
+             save=True,
+             save_path=save_path_colormap,
+             show=True, ret=False, model="BT_Settl", instru="HARMONI")
 
 if __name__ == '__main__':
+    run_Colormaps()
     run_FastCurves()
 
 
