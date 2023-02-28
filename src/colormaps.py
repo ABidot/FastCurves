@@ -14,6 +14,21 @@ def colormap(T, step_l0=0.1, nbPixels=3330, log=False, tellurics=True, broadenin
              save=True,
              save_path=save_path_colormap,
              show=False, ret=False, model="BT_Settl", instru="HARMONI"):
+    """
+    Creating figure for IFS Trade-off between Bandwidth/Resolution
+    :param T: Temperature of the companion
+    :param step_l0: sampling step for the wavelength axis
+    :param nbPixels: number of pixels considered to sample a spectrum
+    :param log: logscale for the y-axis of the figure if True
+    :param tellurics: tellurics absorption considered if True
+    :param broadening: rotational broadening (km/s)
+    :param save: save the figure if True
+    :param save_path: saving path for the figure
+    :param show: displays the figures if True
+    :param ret: return the colormaps array if True
+    :param model: name of the template library ("BT_Settl" or "ExoREM")
+    :param instru: name of the instrument considered
+    """
 
     R = np.logspace(2.7, 4.99, num=80)
 
@@ -125,6 +140,18 @@ def colormap_no_trade(T, step_l0=0.1, log=False, tellurics=True,
              save=True,
              save_path=save_path_colormap,
              show=False, ret=False):
+    """
+    Creating figure to identify the optimal spectral range for molecular mapping
+    :param T: Temperature of the companion
+    :param step_l0: sampling step for the wavelength axis
+    :param log: logscale for the y-axis of the figure if True
+    :param tellurics: tellurics absorption considered if True
+    :param broadening: rotational broadening (km/s)
+    :param save: save the figure if True
+    :param save_path: saving path for the figure
+    :param show: displays the figures if True
+    :param ret: return the colormaps array if True
+    """
 
     R = np.logspace(2, 4.99, num=100)
 

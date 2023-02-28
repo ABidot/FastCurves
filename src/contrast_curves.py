@@ -12,30 +12,30 @@ path_file = os.path.dirname(__file__)
 save_path = os.path.join(os.path.dirname(path_file), "output_curves/")
 
 
-
 def get_config_data(instrument_name):
+    """
+    Get the parameters of an instrument
+    :param instrument_name: name of the instrument considered
+    :return: config parameters of the instrument
+    """
     for dict in config_data_list:
         if dict['name'] == instrument_name:
             return(dict)
     raise NameError('Undefined Instrument Name')
 
-def contrast_curve(time, PSF_profile, alpha0, star_spectrum, RON = 10):
-    relative_mag = np.zeros_like(PSF_profile[0, :])
-    noise = np.zeros_like(PSF_profile[0, :])
-    for i in range(PSF_profile.shape[1]):
-        star = PSF_profile[1, i] * np.copy(star_spectrum.flux)
-        if PSF_profile[0, i] < 70 :
-            sigma_halo_2 = np.mean(star) * 1e-4
-            alpha0_FPM = alpha0 * 1e-4
-        else :
-            sigma_halo_2 = np.mean(star)
-            alpha0_FPM = alpha0
-        sigma_ron_2 = RON ** 2
-        C = 5 * np.sqrt(9 * (sigma_halo_2 + sigma_ron_2)) / (alpha0_FPM * np.sqrt(time))
-        relative_mag[i] = -2.5 * np.log10(C)
-    return relative_mag
 
 def contrast_curve_DIT(time, PSF_profile, alpha0, star_spectrum, config_data, apodizer, corono = None):
+    """
+    Compute the contrast curves
+    :param time: exposure time (minutes)
+    :param PSF_profile: Profile of the PSF
+    :param alpha0: total amount of useful photons for molecular mapping for a 0 contrast
+    :param star_spectrum: spectrum of the star
+    :param config_data: config file for the instrument considered
+    :param apodizer: name of the apodizer considered
+    :param corono: name of the considered coronograph
+    :return: contrast curves
+    """
     print("MEAN PHOTON: ", np.mean(star_spectrum.flux))
     relative_mag = np.zeros_like(PSF_profile[0, :])
     relative_mag_photon_only = np.zeros_like(PSF_profile[0, :])
@@ -53,19 +53,13 @@ def contrast_curve_DIT(time, PSF_profile, alpha0, star_spectrum, config_data, ap
         max_flux_e = PSF_profile[1, n] * np.copy(star_spectrum.flux) * quantum_efficiency
     elif instru == "ERIS":
         max_flux_e = PSF_profile[1, 0] * np.copy(star_spectrum.flux) * quantum_efficiency
-    elif instru == "GRAVITY_plus":
-        max_flux_e = PSF_profile[1, 0] * np.copy(star_spectrum.flux) * quantum_efficiency ## A MODIFIER CAR PAS IFU
-    elif instru == "SPHERE_SAPHIRA" or instru == "SPHERE_HxRG" or instru == "SPHERE_SAXO_plus" or instru == "SPHERE_SAXO_plus_fiber":
-        if corono is None :
-            max_flux_e = PSF_profile[1, 0] * np.copy(star_spectrum.flux) * quantum_efficiency
-        else:
-            max_flux_e = PSF_profile[1, 0] * np.copy(star_spectrum.flux) * quantum_efficiency * corono[1, 0]
 
     saturation_e = config_data["spec"]["saturation_e"]
     min_DIT = config_data["spec"]["minDIT"]
     max_DIT = config_data["spec"]["maxDIT"]
     DIT = saturation_e/np.max(max_flux_e)
-    print("saturating DIT:", DIT*60)
+    print("saturating DIT:", DIT*60, " minutes")
+
     if DIT > max_DIT :
         DIT = max_DIT
     elif DIT < min_DIT :
@@ -96,17 +90,11 @@ def contrast_curve_DIT(time, PSF_profile, alpha0, star_spectrum, config_data, ap
             alpha0_FPM = alpha0 * 1e-4
         else :
             sigma_halo_2 = np.mean(star)
-            if i == 0:
-                print("SIGMA HALO", sigma_halo_2)
-                print("ALPHA", alpha0)
-                print("ATTENUATION", PSF_profile[1, i], DIT ,quantum_efficiency)
-                print("RAW SNR", alpha0/sigma_halo_2)
-                print("TIME", np.sqrt(time / DIT))
             alpha0_FPM = alpha0
 
         sigma_dark_current_2 = dark_current * DIT * 60
         sigma_ron_2 = RON_eff ** 2
-        C = 5 * np.sqrt(9 * (sigma_halo_2 + sigma_ron_2 + sigma_dark_current_2)) / (alpha0_FPM * np.sqrt(time/DIT)) # 9 est le nombre de pixels sur lequel
+        C = 5 * np.sqrt(9 * (sigma_halo_2 + sigma_ron_2 + sigma_dark_current_2)) / (alpha0_FPM * np.sqrt(time/DIT)) # 9 est le nombre de pixels sur lequel on integre le companion
         C_photon_only = 5 * np.sqrt(9 * (sigma_halo_2)) / (alpha0_FPM * np.sqrt(time / DIT))
         relative_mag[i] = -2.5 * np.log10(C)
         relative_mag_photon_only[i] = -2.5 * np.log10(C_photon_only)
@@ -132,6 +120,25 @@ def transmission_HARMONI(uwvs, band, R, apodizer):
 
 def FastCurves(time, mag_star, planet_spectrum, star_spectrum, broadening=0, apodizer="SP1", strehl="MED", tellurics=True,
                  verbose=True, save=True, form="png", save_path=save_path, instru="HARMONI", cmap_name = "Spectral", corono = False):
+    """
+    Main function for computing and saving the Contrast Curves
+    :param time: exposure time (minutes)
+    :param mag_star: magnitude of the star considered
+    :param planet_spectrum: spectrum of the planet
+    :param star_spectrum: spectrum of the star
+    :param broadening: rotational braodening (km/s)
+    :param apodizer: name of the apodizer considered
+    :param strehl: name of the expected strehl condition
+    :param tellurics: True or False
+    :param verbose: It displays the figures if True
+    :param save: Save the figures if True
+    :param form: format of the figure
+    :param save_path: path for saving the figure
+    :param instru: name of the considered instrument
+    :param cmap_name: name of the colormap
+    :param corono: Considering the case of a coronograph if True
+    :return: Contrast curves with photon noise only and with all sources of noise profile_interp[0, :], mag, mag_photon_only
+    """
     file_path = os.path.dirname(__file__)
     PSF_path = os.path.join(os.path.dirname(file_path), "sim_data/PSF/PSF_"+ instru +'/')
     Transmission_path = os.path.join(os.path.dirname(file_path), "sim_data/Transmission/" + instru + '/')

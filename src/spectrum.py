@@ -29,9 +29,20 @@ class Spectrum:
         self.high_pass_flux = None
 
     def set_flux(self, nbPhotons):
+        """
+        Set the right amount of photons
+        :param nbPhotons: Total amount of Photons
+        """
         self.flux = nbPhotons * self.flux / np.sum(self.flux)
 
     def degrade_resolution(self, Rnew, wave, tell=False):
+        """
+        Degrade the spectral resolution
+        :param Rnew: New spectral resolution
+        :param wave: New wavelength axis (micron)
+        :param tell: Does not conserve the same amount of photons if True, useful for degrading tellurics transmission profile
+        :return: Spectrum with the new spectral resolution
+        """
         dwl = np.zeros_like(wave) + (wave[1]-wave[0])
         valid = np.where((self.wavelength >= wave[0]) & (self.wavelength <= wave[-1]))
         flr = cg.downbin_spec(self.flux, self.wavelength, wave, dlam=dwl)
@@ -40,14 +51,18 @@ class Spectrum:
         else:
             return Spectrum(wave, np.sum(self.flux[valid])*flr/np.nansum(flr), Rnew, self.Temperature)
 
-    def interpolate_wavelength(self, influx, wavelength_input, wavelength_output, nbPhot=None):
+    def interpolate_wavelength(self, influx, wavelength_input, wavelength_output):
         """
         Interpolate a 1d array over a new axis
+        :param influx: flux
+        :param wavelength_input: current wavelength axis
+        :param wavelength_output: new wavelength axis
+        :return: Interpolated spectrum
         """
-        if nbPhot is None:
-            nbPhot = np.sum(influx[np.where((wavelength_input >= wavelength_output[0]) & (wavelength_input <= wavelength_output[-1]))])
-        # Interpolate
 
+        nbPhot = np.sum(influx[np.where((wavelength_input >= wavelength_output[0]) & (wavelength_input <= wavelength_output[-1]))])
+
+        # Interpolate
         flog = np.log10(influx)
         f = interp1d(wavelength_input, flog, bounds_error=False, fill_value=0)
         finterp_log = f(wavelength_output)
@@ -75,6 +90,14 @@ class Spectrum:
         return Spectrum(self.wavelength, flux, self.R, self.Temperature)
 
     def template_projection_tell(self, fraction_PSF, transmission=1, sigma=10):
+        """
+        Compute the total amount of useful photons for molecular mapping detection
+        :param fraction_PSF: ratio of the companion flux contained in a 3x3 pixels box
+        :param transmission: instrumental + sky transmission
+        :param sigma: parameter for the high-pass filter
+        :return : amount of useful photons
+        """
+
         flux = np.copy(self.flux) * fraction_PSF
         self.high_pass_flux = (np.copy(flux)  - gaussian_filter(np.copy(flux) , sigma=sigma)) * transmission
         template = self.high_pass_flux / np.linalg.norm(self.high_pass_flux)

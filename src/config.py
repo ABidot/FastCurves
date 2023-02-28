@@ -13,7 +13,6 @@ config_data_HARMONI = {
     'name': "HARMONI",
     'telescope': {"diameter": 37, "area": 980.},
     # all-glass diameter in m, including central hole, secondary and spider obscuration in m^2, K, Armazones coord.
-    # in deg
     'data_dir': "tp_data/",
 
     'gratings': {"HK": GratingInfo(1.450, 2.450, 3355.),
@@ -26,7 +25,6 @@ config_data_HARMONI = {
     'apodizers': {"SP1": ApodizerInfo(0.45, 70), "SP2": ApodizerInfo(0.35, 100), "SP3": ApodizerInfo(0.53, 50), "SP4": ApodizerInfo(0.59, 30), "NO_SP": ApodizerInfo(0.84, 50)},
     'strehl': {"JQ1", "JQ2", "MED"},
 
-    'LSF_kernel_size': 12.,  # LSF kernel size in sigma units
     'spec': {"RON": 10.0, "dark_current": 0.0053, "pixscale": 0.004, "minDIT": 0.026, "maxDIT": 1, "saturation_e": 40000., "Q_eff": 0.90},
     # e-,e-, e-/s,px/arcsec,%,%,%, K, K, e-; ron_longexp for DIT>120s
 
@@ -36,7 +34,7 @@ config_data_ERIS = {
     'name': "ERIS",
     'telescope': {"diameter": 8, "area": 49.3},
     # all-glass diameter in m, including central hole, secondary and spider obscuration in m^2, K, Armazones coord.
-    # in deg
+
     'data_dir': "tp_data/",
 
     'gratings': {"J_low": GratingInfo(1.09, 1.42, 5000.),
@@ -56,7 +54,6 @@ config_data_ERIS = {
     'apodizers': {"NO_SP": ApodizerInfo(1, 0)},
     'strehl': {"JQ1"},
 
-    'LSF_kernel_size': 12.,  # LSF kernel size in sigma units
     'spec': {"RON": 12.0, "dark_current": 0.1, "pixscale": 0.025, "minDIT": 0.026, "maxDIT": 2, "saturation_e": 40000., "Q_eff": 0.85},
     # e-, e-/s, arcsec/pxl, min, e-, e-/ADU, % ;
 
